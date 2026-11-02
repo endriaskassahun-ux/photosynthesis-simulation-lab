@@ -1,0 +1,811 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>
+<title>Elodea Photosynthesis Lab</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:wght@600;800&display=swap">
+<style>
+/* Layout: one Chromebook screen. Factors | tank + time | record + data table. Graph and background below. */
+:root{
+  --bg:#eef5f1; --surface:#ffffff; --surface-2:#f4f9f6; --ink:#16302a; --muted:#56706a; --line:#d3e3dc; --dash:#a9c3b8;
+  --leaf:#1f7a4d; --leaf-ink:#ffffff; --leaf-soft:#dcefe4; --water:#cfe9f2; --water-deep:#9fd0e2; --glass:#7f97a3;
+  --lamp:#f2b81f; --o2:#ffffff; --warn-bg:#fff4dc; --warn-ink:#7a4f00; --danger:#b42318; --danger-soft:#fde7e5; --focus:#1565c0;
+  --c-light:#d9a400; --c-temp:#d23c3c; --c-co2:#5a7896; --orange:#e8730c; --orange-ink:#ffffff; --mine:#e8730c; --trend:#1565c0;
+  --display:"Bricolage Grotesque", "Trebuchet MS", system-ui, sans-serif;
+  --body:"Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0f1b18; --surface:#16251f; --surface-2:#1c2f28; --ink:#e3f0ea; --muted:#9db6ad; --line:#2c443b; --dash:#46665a;
+  --leaf:#4fbf86; --leaf-ink:#0b1a13; --leaf-soft:#1f3a2e; --water:#173845; --water-deep:#1f4d5e; --glass:#8aa6b3;
+  --lamp:#f5c544; --o2:#e9f7ff; --warn-bg:#3a2e12; --warn-ink:#f6d58a; --danger:#ff8a80; --danger-soft:#3b1d1a; --focus:#90caf9;
+  --c-light:#f5c544; --c-temp:#ff7b72; --c-co2:#9bb4cc; --orange:#ff9a3d; --orange-ink:#1a0d00; --mine:#ff9a3d; --trend:#90caf9; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#0f1b18; --surface:#16251f; --surface-2:#1c2f28; --ink:#e3f0ea; --muted:#9db6ad; --line:#2c443b; --dash:#46665a;
+  --leaf:#4fbf86; --leaf-ink:#0b1a13; --leaf-soft:#1f3a2e; --water:#173845; --water-deep:#1f4d5e; --glass:#8aa6b3;
+  --lamp:#f5c544; --o2:#e9f7ff; --warn-bg:#3a2e12; --warn-ink:#f6d58a; --danger:#ff8a80; --danger-soft:#3b1d1a; --focus:#90caf9;
+  --c-light:#f5c544; --c-temp:#ff7b72; --c-co2:#9bb4cc; --orange:#ff9a3d; --orange-ink:#1a0d00; --mine:#ff9a3d; --trend:#90caf9; color-scheme:dark }
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.4;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:10px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.15}
+h1{font-size:1.45rem;color:var(--leaf);font-weight:800}
+h2{font-size:1.1rem;font-weight:700}
+h3{font-size:1.02rem;font-weight:700}
+p{margin:0}
+.wrap{max-width:1500px;margin:0 auto;display:grid;gap:12px}
+.top{display:flex;gap:6px 16px;align-items:baseline;flex-wrap:wrap}
+.top p{flex:1 1 360px;min-width:0}
+.main{display:grid;grid-template-columns:300px minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:start}
+@media (max-width:1160px){.main{grid-template-columns:290px minmax(0,1fr)}.datacard{grid-column:2}}
+@media (max-width:760px){.main{grid-template-columns:1fr}.datacard{grid-column:auto}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px;display:grid;gap:10px;min-width:0}
+.muted{color:var(--muted)} .small{font-size:14px}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer;border-radius:9px;border:1px solid var(--line);background:var(--surface-2);padding:6px 11px;font-weight:700;font-size:14px}
+button:hover:not(:disabled){border-color:var(--leaf)}
+button:disabled{opacity:.45;cursor:not-allowed}
+button:focus-visible,select:focus-visible,input:focus-visible,summary:focus-visible,canvas:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.btn-primary{background:var(--leaf);color:var(--leaf-ink);border-color:var(--leaf)}
+.btn-big{font-size:1.08rem;padding:11px}
+.btn-danger{color:var(--danger);background:var(--danger-soft);border-color:transparent}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.between{justify-content:space-between}
+/* factor boxes */
+.factor{border:2px dashed var(--dash);border-radius:12px;padding:8px 10px;display:grid;gap:2px}
+.ctl-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.ctl-head label,.ctl-head .lbl{font-weight:700}
+.ctl-head .lbl{white-space:nowrap}
+.val{font-variant-numeric:tabular-nums;font-weight:700;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:1px 8px;min-width:4em;text-align:right}
+.ends{display:flex;justify-content:space-between;font-size:13px;color:var(--muted)}
+.hint{font-size:14px;color:var(--muted)}
+input[type=range]{width:100%;height:24px;margin:0}
+.s-light{accent-color:var(--c-light)} .s-temp{accent-color:var(--c-temp)} .s-co2{accent-color:var(--c-co2)} .s-wave{accent-color:var(--leaf)}
+.track-wrap{position:relative;padding-top:10px}
+.marker{position:absolute;top:-2px;font-size:12px;color:var(--muted);transform:translateX(-50%);pointer-events:none;white-space:nowrap;line-height:1}
+.spectrum{height:7px;border-radius:4px;background:linear-gradient(90deg,#7a00ff,#0040ff 15%,#00b0ff 28%,#00d040 42%,#b0e000 55%,#ffe000 60%,#ff8000 70%,#ff2000 85%,#a00000)}
+.info-btn{width:22px;height:22px;padding:0;border-radius:50%;font-size:13px;line-height:1;background:var(--orange);color:var(--orange-ink);border:0;font-family:Georgia,serif;font-weight:700}
+.tip{background:var(--leaf-soft);border-radius:10px;padding:8px 10px;font-size:14px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.seg button{border:0;border-radius:0;background:transparent;padding:5px 10px}
+.seg button[aria-pressed=true]{background:var(--leaf);color:var(--leaf-ink)}
+.switch{display:flex;gap:8px;align-items:center;font-size:14px;font-weight:700}
+.switch input{width:18px;height:18px;accent-color:var(--leaf)}
+.switch.orange input{accent-color:var(--orange)}
+.std{font-size:13px;color:var(--muted);margin-top:-4px}
+.status{font-size:14px;min-height:1.4em}
+.lf{background:var(--warn-bg);color:var(--warn-ink);border-radius:10px;padding:6px 10px;font-weight:700;font-size:14px}
+/* experiment */
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.stat{border:1px solid var(--line);border-radius:10px;padding:6px 9px;background:var(--surface-2);min-width:0}
+.stat b{display:block;font-family:var(--display);font-size:1.4rem;font-variant-numeric:tabular-nums;line-height:1.1}
+.stat span{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;line-height:1.2;display:block}
+.scene{border-radius:10px;overflow:hidden;border:1px solid var(--line)}
+.scene svg{display:block;width:100%;height:auto}
+.starch{display:grid;gap:3px}
+.bar{height:10px;border-radius:5px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--leaf);transition:width .3s}
+.timebox{display:grid;gap:6px}
+.jump{display:grid;grid-template-columns:118px repeat(4,minmax(0,1fr));gap:5px;align-items:center}
+.jump span{font-size:14px;font-weight:700}
+.jump button{padding:5px 4px;font-variant-numeric:tabular-nums}
+.clock{font-family:var(--display);font-size:1.1rem;font-variant-numeric:tabular-nums;font-weight:700}
+/* data table */
+.tbl-wrap{overflow-x:hidden;overflow-y:auto;border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;table-layout:fixed;font-variant-numeric:tabular-nums;font-size:15px}
+th,td{padding:0 4px;text-align:center;border-bottom:1px solid var(--line);overflow:hidden;text-overflow:ellipsis}
+td{height:38px;white-space:nowrap}
+th{position:sticky;top:0;background:var(--surface-2);font-size:13.5px;z-index:1;height:46px;line-height:1.15;white-space:normal}
+td:last-child{font-weight:700}
+tr.blank td{color:transparent}
+.confirm{background:var(--danger-soft);border-radius:10px;padding:8px 10px}
+textarea{width:100%;min-height:100px;font-family:ui-monospace,Consolas,monospace;font-size:13px;background:var(--surface-2);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px}
+.avg-list{margin:0;padding-left:18px;font-size:14px}
+/* graph */
+.graph-grid{display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:14px;align-items:start}
+@media (max-width:860px){.graph-grid{grid-template-columns:1fr}}
+.graph-box{border:1px solid var(--line);border-radius:10px;background:var(--surface);overflow:hidden}
+canvas{display:block;width:100%;height:auto;touch-action:none}
+.gside{display:grid;gap:10px}
+.note{background:var(--warn-bg);color:var(--warn-ink);border-radius:10px;padding:8px 10px;font-size:14px}
+select{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:5px 8px}
+/* roles, processed table, dialog */
+.factor{position:relative;min-width:0}
+.role{position:absolute;top:-10px;right:10px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:1px 7px;border-radius:6px;white-space:nowrap;line-height:1.5}
+.role.iv{background:var(--leaf);color:var(--leaf-ink)}
+.role.cv{background:var(--surface);color:var(--muted);border:1px solid var(--line)}
+.factor.is-iv{border-color:var(--leaf)}
+.ivpick{display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:var(--leaf-soft);border-radius:10px;padding:6px 10px}
+.ivpick label{font-weight:700;font-size:14px}
+.ptbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px}
+#ptable{table-layout:auto;width:100%}
+#ptable th{position:static;white-space:normal;font-size:13.5px;padding:6px}
+#ptable td{padding:0 8px}
+#ptable .c-iv{min-width:104px}
+#ptable .c-tr{min-width:58px}
+#ptable .c-avg{min-width:136px}
+#ptable tr.blank td{color:transparent}
+.changes{color:var(--danger);font-weight:700;font-size:14px;display:grid;gap:2px}
+.overlay{position:fixed;inset:0;background:rgba(10,20,16,.45);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+.dialog{background:var(--surface);color:var(--ink);border-radius:14px;padding:18px;max-width:420px;width:100%;display:grid;gap:14px;box-shadow:0 10px 40px rgba(0,0,0,.3);border:1px solid var(--line)}
+.dialog p{font-size:17px;font-weight:700}
+.trendrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+/* background */
+.bg-text{display:grid;gap:10px;max-width:78ch;font-size:16px;line-height:1.5}
+.eq{background:var(--surface-2);border-radius:10px;padding:10px 14px;border:1px solid var(--line)}
+.refs{font-size:14px;padding-left:20px;display:grid;gap:4px;margin:0}
+a{color:var(--leaf)}
+details summary{cursor:pointer;font-weight:700;font-size:14px}
+ol.steps{margin:4px 0 0;padding-left:20px;font-size:14px}
+@media (prefers-reduced-motion:reduce){.bar i{transition:none}}
+</style>
+
+<div class="wrap">
+<header class="top">
+  <h1>Photosynthesis Rate Lab</h1>
+  <p class="small">Investigate how the environment affects the rate of photosynthesis in the pondweed <i>Elodea</i>. Change one factor at a time and count the oxygen (O<sub>2</sub>) bubbles.</p>
+  <details class="small"><summary>How to do the lab</summary>
+    <ol class="steps">
+      <li>Choose the <b>independent variable</b> above the raw data table. Set the control variables.</li>
+      <li>Click <b>Record data point</b>. Record at least 3 trials. Copy them into your notebook.</li>
+      <li>Change the independent variable to a new value and repeat.</li>
+      <li>Click <b>Transfer data to processed data table</b>, then <b>Calculate average</b>.</li>
+      <li>Plot each value and its average on the graph by hand. Then try <b>Show trend line</b>.</li>
+    </ol>
+  </details>
+</header>
+
+<div class="main">
+<!-- FACTORS -->
+<aside class="card" aria-label="Factors" style="gap:14px">
+  <div class="factor" id="f-light">
+    <div class="ctl-head"><label for="light">Light intensity (%)</label><span class="role" id="role-light"></span><output class="val" id="lightVal">50</output></div>
+    <input class="s-light" type="range" id="light" min="0" max="100" step="1" value="50" aria-describedby="lightHint">
+    <div class="ends"><span>0 (dark)</span><span>100 (full sun)</span></div>
+    <p class="hint" id="lightHint">Brightness as a percent of full sunlight. The lamp never moves. <span id="luxNote"></span></p>
+  </div>
+
+  <div class="factor" id="f-temp">
+    <div class="ctl-head"><label for="temp">Temperature (°C)</label><span class="role" id="role-temp"></span><output class="val" id="tempVal">25</output></div>
+    <input class="s-temp" type="range" id="temp" min="0" max="50" step="1" value="25" aria-describedby="tempHint">
+    <div class="ends"><span>0 °C</span><span>50 °C</span></div>
+    <p class="hint" id="tempHint">Enzymes work best near 25 °C. Too hot damages them.</p>
+  </div>
+
+  <div class="factor" id="f-co2">
+    <div class="ctl-head">
+      <span class="row" style="gap:6px"><label for="co2">CO<sub>2</sub> (ppm)</label>
+      <button class="info-btn" id="ppmBtn" aria-expanded="false" aria-controls="ppmTip" aria-label="What is ppm?" title="What is ppm?">i</button></span>
+      <span class="role" id="role-co2"></span><output class="val" id="co2Val">420</output>
+    </div>
+    <div id="ppmTip" class="tip" hidden><b>ppm means "parts per million".</b> Imagine splitting the air into 1 million equal parts. 420 ppm means 420 of those parts are carbon dioxide. That is the same as 0.042%.</div>
+    <div class="track-wrap">
+      <input class="s-co2" type="range" id="co2" min="0" max="5000" step="10" value="420" aria-describedby="co2Hint">
+      <span class="marker" style="left:calc(8.4% + 2px)">air today</span>
+    </div>
+    <div class="ends"><span>0</span><span id="co2Pct">0.042%</span><span>5000 (0.5%)</span></div>
+    <p class="hint" id="co2Hint">Air has about 420 ppm. Baking soda in the water raises CO<sub>2</sub>.</p>
+  </div>
+
+  <div class="factor" id="f-wave">
+    <div class="ctl-head"><span class="lbl">Light colour</span><span class="role" id="role-wave"></span>
+      <div class="seg" style="flex:none" role="group" aria-label="Light colour">
+        <button id="modeWhite" aria-pressed="true">White</button><button id="modeColour" aria-pressed="false">One colour</button>
+      </div>
+    </div>
+    <div class="ctl-head"><label for="wave">Wavelength (nm)</label><output class="val" id="waveVal">White</output></div>
+    <div class="spectrum" aria-hidden="true"></div>
+    <input class="s-wave" type="range" id="wave" min="400" max="700" step="5" value="550" disabled aria-describedby="waveHint">
+    <div class="ends"><span>400 (violet)</span><span>700 (red)</span></div>
+    <p class="hint" id="waveHint">Same amount of light for every colour. Green still works, but less.</p>
+  </div>
+
+  <button class="btn-danger" id="resetStd">Reset to standard conditions</button>
+  <p class="std">Standard conditions: 50% light, 25 °C, 420 ppm CO2, white light.</p>
+
+  <label class="switch orange"><input type="checkbox" id="showLF"> Show limiting factor</label>
+  <div id="lfBox" class="lf" hidden></div>
+</aside>
+
+<!-- EXPERIMENT -->
+<section class="card" aria-label="Experiment view">
+  <div class="row between"><h2>Experiment view</h2><button class="btn-danger" id="resetRun">Reset run</button></div>
+  <div class="stats">
+    <div class="stat"><b id="sRate">0.0</b><span>O<sub>2</sub> bubbles/min (now)</span></div>
+    <div class="stat"><b id="sTotal">0</b><span>Total O<sub>2</sub> bubbles</span></div>
+    <div class="stat"><b id="sGlu">0.000</b><span>Glucose made (mg)</span></div>
+  </div>
+  <div class="scene">
+    <svg id="svg" viewBox="0 44 640 286" role="img" aria-label="An Elodea sprig in a water tank with a lamp shining on it. Oxygen bubbles rise from the top of the stem.">
+      <defs>
+        <linearGradient id="beamGrad" x1="0" x2="1" y1="0" y2="0">
+          <stop id="beamStop0" offset="0" stop-color="#fff" stop-opacity="1"/>
+          <stop id="beamStop1" offset="1" stop-color="#fff" stop-opacity=".6"/>
+        </linearGradient>
+        <radialGradient id="glow"><stop offset="0" stop-color="#fffbe6" stop-opacity="1"/><stop offset="1" stop-color="#fffbe6" stop-opacity="0"/></radialGradient>
+      </defs>
+      <rect x="0" y="0" width="640" height="330" fill="var(--surface-2)"/>
+      <rect x="0" y="306" width="640" height="24" fill="var(--line)"/>
+      <rect x="210" y="74" width="340" height="230" fill="var(--water)"/>
+      <rect x="210" y="74" width="340" height="3" fill="var(--water-deep)"/>
+      <polygon id="beam" points="92,150 92,174 420,96 420,262" fill="url(#beamGrad)" opacity="0.5"/>
+      <polygon id="beamCore" points="92,154 92,170 420,128 420,230" fill="#ffffff" opacity="0"/>
+      <g id="plant"></g>
+      <rect x="395" y="284" width="30" height="18" rx="5" fill="var(--glass)"/>
+      <g id="bubbles"></g>
+      <g>
+        <rect x="512" y="92" width="12" height="170" rx="6" fill="var(--surface)" stroke="var(--glass)"/>
+        <rect id="thermo" x="515" y="160" width="6" height="100" rx="3" fill="#d9483b"/>
+        <circle cx="518" cy="268" r="11" fill="#d9483b" stroke="var(--glass)"/>
+        <text id="thermoTxt" x="518" y="88" text-anchor="middle" font-size="17" font-weight="700" fill="var(--ink)">25 °C</text>
+      </g>
+      <path d="M206 52 V306 H554 V52" fill="none" stroke="var(--glass)" stroke-width="5" stroke-linejoin="round"/>
+      <g>
+        <circle id="glowC" cx="92" cy="162" r="34" fill="url(#glow)" opacity="0"/>
+        <rect x="30" y="300" width="56" height="6" rx="2" fill="var(--glass)"/>
+        <rect x="54" y="186" width="6" height="116" fill="var(--glass)"/>
+        <path d="M40 140 L84 146 L84 178 L40 184 Z" fill="#4b5d66"/>
+        <rect id="bulb" x="84" y="148" width="9" height="28" rx="3" fill="var(--lamp)"/>
+        <text x="58" y="130" text-anchor="middle" font-size="19" font-weight="700" fill="var(--ink)">Lamp</text>
+      </g>
+      <text x="430" y="68" font-size="17" fill="var(--muted)">O₂ bubbles</text>
+      <text x="218" y="100" font-size="17" fill="var(--muted)">Water + baking soda</text>
+      <text x="410" y="324" text-anchor="middle" font-size="15" fill="var(--muted)">weight</text>
+    </svg>
+  </div>
+  <div class="starch">
+    <div class="row between small"><b>Glucose stored as starch</b><span id="starchTxt" class="muted">0.000 mg of 2 mg</span></div>
+    <div class="bar" aria-hidden="true"><i id="starchBar"></i></div>
+  </div>
+  <div class="timebox" aria-label="Time controls">
+    <div class="row between">
+      <div class="seg" role="group" aria-label="Time mode">
+        <button id="mReal" aria-pressed="false">Real time</button><button id="mLapse" aria-pressed="true">Time lapse</button>
+      </div>
+      <button id="playBtn" class="btn-primary">▶ Play</button>
+      <span class="clock" id="clock">Time: 0 min</span>
+    </div>
+    <div class="jump"><span>Move backward</span>
+      <button data-dt="-1" aria-label="Move backward 1 min">1 min</button><button data-dt="-10" aria-label="Move backward 10 min">10 min</button><button data-dt="-30" aria-label="Move backward 30 min">30 min</button><button data-dt="-60" aria-label="Move backward 60 min">60 min</button></div>
+    <div class="jump"><span>Move forward</span>
+      <button data-dt="1" aria-label="Move forward 1 min">1 min</button><button data-dt="10" aria-label="Move forward 10 min">10 min</button><button data-dt="30" aria-label="Move forward 30 min">30 min</button><button data-dt="60" aria-label="Move forward 60 min">60 min</button></div>
+    <p class="hint" id="modeHint">Time lapse: 1 second on screen = 1 minute.</p>
+  </div>
+</section>
+
+<!-- DATA -->
+<section class="card datacard" aria-label="Data table">
+  <button class="btn-primary btn-big" id="recordBtn">+ Record data point</button>
+  <p class="status" id="status" role="status" aria-live="polite">No trials recorded yet.</p>
+  <div class="ivpick"><label for="ivMain">Independent variable</label>
+    <select id="ivMain"><option value="light">Light intensity (%)</option><option value="temp">Temperature (°C)</option><option value="co2">CO2 concentration (ppm)</option><option value="wave">Light wavelength (nm)</option></select></div>
+  <div class="row between"><h2>Raw data table</h2><span class="small muted" id="countTxt">0 / 100 trials</span></div>
+  <div class="tbl-wrap" id="tblWrap">
+    <table>
+      <colgroup><col style="width:12%"><col style="width:15%"><col style="width:15%"><col style="width:16%"><col style="width:20%"><col style="width:22%"></colgroup>
+      <thead><tr><th>Trial</th><th>Light (%)</th><th>Temp (°C)</th><th>CO<sub>2</sub> (ppm)</th><th>Wavelength (nm)</th><th>Rate (O<sub>2</sub>/min)</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+  <label class="switch"><input type="checkbox" id="showAvg"> Check averages (teacher)</label>
+  <div id="avgBox" hidden></div>
+  <div class="row">
+    <button class="btn-primary" id="transferBtn">Transfer data to processed data table</button>
+    <button class="btn-danger" id="clearBtn">Clear data</button>
+  </div>
+  <div id="confirmBox" class="confirm" hidden>
+    <p id="confirmTxt" style="margin-bottom:8px">Delete all trials? This cannot be undone.</p>
+    <div class="row"><button class="btn-danger" id="confirmYes">Yes, delete</button><button id="confirmNo">Cancel</button></div>
+  </div>
+
+  <div class="row between" style="margin-top:6px"><h2>Processed data table</h2></div>
+  <div class="ptbl-wrap"><table id="ptable"><thead id="phead"></thead><tbody id="pbody"></tbody></table></div>
+  <div class="changes" id="changes" aria-live="polite"></div>
+  <div class="row">
+    <button class="btn-primary" id="avgBtn">Calculate average</button>
+    <button id="copyBtn">Copy</button>
+    <button id="exportBtn">Export to CSV</button>
+    <button class="btn-danger" id="pClearBtn">Clear data</button>
+  </div>
+  <p class="status" id="pStatus" role="status" aria-live="polite"></p>
+  <div id="pConfirmBox" class="confirm" hidden>
+    <p style="margin-bottom:8px">Clear the processed data table? The raw data stays.</p>
+    <div class="row"><button class="btn-danger" id="pConfirmYes">Yes, clear</button><button id="pConfirmNo">Cancel</button></div>
+  </div>
+  <div id="tsvBox" hidden style="display:grid;gap:6px">
+    <textarea id="tsvText" readonly aria-label="Processed data to copy"></textarea>
+    <p class="hint">The text is selected. Press Ctrl+C, then paste into Google Sheets.</p>
+  </div>
+  <div id="csvBox" hidden style="display:grid;gap:8px">
+    <textarea id="csvText" readonly aria-label="CSV data"></textarea>
+    <div class="row"><button id="copyCsv">Copy CSV</button><button id="dlCsv">Download file</button><button id="closeCsv">Close</button></div>
+    <p class="hint" id="csvHint">Paste into a spreadsheet. If Download does nothing on this page, use Copy.</p>
+  </div>
+</section>
+</div>
+
+<!-- GRAPH -->
+<section class="card" aria-label="Graph">
+  <div class="row between">
+    <h2>Graph</h2>
+    <span class="small"><b>Independent variable:</b> <span id="ivText">Light intensity (%)</span></span>
+  </div>
+  <div class="graph-grid">
+    <div style="display:grid;gap:8px;min-width:0">
+      <div class="graph-box"><canvas id="cv" width="1000" height="500" tabindex="0" aria-label="Graph. Use the tools to add, move or remove your own points."></canvas></div>
+      <div class="trendrow">
+        <button id="trendBtn" class="btn-primary">Show trend line</button>
+        <div class="seg" role="group" aria-label="Trend line type"><button id="trLine" aria-pressed="false">Straight line</button><button id="trCurve" aria-pressed="true">Curve</button></div>
+        <span class="hint" id="trendMsg"></span>
+      </div>
+      <div id="graphNote" class="note" hidden></div>
+    </div>
+    <div class="gside">
+      <div>
+        <p class="small" style="font-weight:700;margin-bottom:4px">My points</p>
+        <div class="seg" role="group" aria-label="Point tool">
+          <button id="tAdd" aria-pressed="true">Add</button><button id="tMove" aria-pressed="false">Move</button><button id="tDel" aria-pressed="false">Remove</button>
+        </div>
+        <p class="hint" id="toolHint" style="margin-top:4px">Click on the graph to add a point.</p>
+      </div>
+      <div class="factor">
+        <div class="ctl-head"><label for="xMax">x axis maximum</label><output class="val" id="xMaxVal">100</output></div>
+        <input class="s-wave" type="range" id="xMax">
+      </div>
+      <div class="factor">
+        <div class="ctl-head"><label for="yMax">y axis maximum</label><output class="val" id="yMaxVal">20</output></div>
+        <input class="s-wave" type="range" id="yMax" min="5" max="100" step="5" value="20">
+      </div>
+      <button id="resetGraph" class="btn-danger">Reset graph</button>
+      <p class="hint" id="graphHint">Plot each value and its average from the processed data table. Reset graph removes your points and resets both axes.</p>
+    </div>
+  </div>
+</section>
+
+<section class="card" aria-label="Context and background">
+  <h2 style="font-size:1.5rem;color:var(--leaf)">Context and background</h2>
+  <div class="bg-text">
+    <p>Plants make their own food by <b>photosynthesis</b>. Chlorophyll in the chloroplasts absorbs light energy. The plant uses this energy to turn carbon dioxide and water into glucose. Oxygen is released as a waste product. The plant stores extra glucose as starch.</p>
+    <p class="eq"><b>Word equation:</b> carbon dioxide + water → glucose + oxygen (light energy, chlorophyll)<br><b>Symbol equation:</b> 6CO<sub>2</sub> + 6H<sub>2</sub>O → C<sub>6</sub>H<sub>12</sub>O<sub>6</sub> + 6O<sub>2</sub></p>
+    <h3>Why count bubbles?</h3>
+    <p><i>Elodea</i> lives under water, so the oxygen it makes comes out of the stem as bubbles. More bubbles per minute means a faster rate of photosynthesis. The plant also uses some oxygen for respiration all the time. So in very dim light, the plant makes less oxygen than it uses, and no bubbles appear. Bubble counting is a quick method, but bubbles are not all the same size, so scientists sometimes collect and measure the gas volume instead.</p>
+    <h3>What is a limiting factor?</h3>
+    <p>A limiting factor is the factor in shortest supply. It holds the rate back. Example: at normal CO<sub>2</sub> (420 ppm), making the lamp brighter speeds up photosynthesis only at first. Then the rate levels off, because now CO<sub>2</sub> is limiting. If you add more CO<sub>2</sub>, the rate can rise higher again. Temperature works differently: the rate increases up to about 25 °C, then falls, because high temperatures damage the enzymes.</p>
+    <h3>Why is green light used less?</h3>
+    <p>Chlorophyll absorbs red and blue light best and reflects more green light. That is why leaves look green. But leaves still absorb some green light and use it, so green light still drives photosynthesis, just more slowly.</p>
+    <h3>How was the glucose estimated?</h3>
+    <p>A bubble is about 0.6 mm³ of gas, but it is not pure oxygen. It also contains other gases from the water, such as nitrogen, and some oxygen dissolves before it forms a bubble. So we estimate each bubble carries about 0.2 mm³ of oxygen. For every 6 oxygen molecules released, the plant makes 1 glucose molecule. Each bubble contains billions of molecules, so 1 bubble does not equal 1 molecule. At standard conditions the sprig makes about 0.2 mg of glucose per hour, which matches published rates for a 10 cm sprig.</p>
+    <h3>Data sources</h3>
+    <ol class="refs">
+      <li>Browse, Dromgoole and Brown (1979). Photosynthesis in the aquatic macrophyte <i>Egeria densa</i>. III. Gas exchange studies. <i>Australian Journal of Plant Physiology</i> 6: 499 to 512. <a href="https://www.publish.csiro.au/FP/PP9790499" target="_blank" rel="noopener">Link</a></li>
+      <li>Barko, Hardin, Smart and Matthews (1980). Growth and metabolism of three introduced submersed plant species in relation to the influences of temperature and light. US Army Engineer Waterways Experiment Station, Technical Report A-80-1. <a href="https://apcrp.el.erdc.dren.mil/elpubs/pdf/tra80-1.pdf" target="_blank" rel="noopener">Link</a></li>
+      <li>Tavechio and Thomaz (2003). Effects of light on the growth and photosynthesis of <i>Egeria najas</i>. <i>Brazilian Archives of Biology and Technology</i> 46: 203 to 209. <a href="https://www.scielo.br/j/babt/a/fm3qwf7LcxswVn44PrRcJ6p/?format=pdf" target="_blank" rel="noopener">Link</a></li>
+      <li>Rahman, Parveen and Shammi (2025). Responses of aquatic macrophyte <i>Egeria densa</i> to saline waters and biochar amended substrate. <i>Journal of Ecological Engineering</i> 26: 234 to 247 (chlorophyll content per gram). <a href="https://www.jeeng.net/Responses-of-aquatic-macrophyte-Egeria-densa-to-saline-waters-and-biochar-namended,195575,0,2.html" target="_blank" rel="noopener">Link</a></li>
+      <li>Liu and van Iersel (2021). Photosynthetic physiology of blue, green, and red light. <i>Frontiers in Plant Science</i> 12: 619987 (discusses the McCree action spectrum). <a href="https://www.frontiersin.org/articles/10.3389/fpls.2021.619987/full" target="_blank" rel="noopener">Link</a></li>
+      <li>AQA GCSE Biology practice questions: example pondweed bubble counts (about 13 to 67 bubbles/min). <a href="https://media.accesstuition.com/AQA-GCSE-Biology/Photosynthesis-QP.pdf" target="_blank" rel="noopener">Link</a></li>
+    </ol>
+    <p class="hint">Simplifications: the model ignores microorganisms in the water, keeps the water at the set temperature, treats all bubbles as the same size, and changes the rate straight away (a real plant needs a few minutes to adjust). Values are based on <i>Egeria densa</i>, the pondweed sold as "Elodea" for school labs.</p>
+  </div>
+</section>
+</div>
+
+<script>
+(function(){
+"use strict";
+/* ---------- MODEL (see Data sources) ---------- */
+const FULL_SUN = 2000;        // µmol photons m-2 s-1 in full sunlight (hidden from students)
+const PMAX = 100;             // gross bubble-equivalents/min with CO2, light and temperature all ideal (scaled to school bubble counts)
+const KM_UM = 77;             // µM free CO2 for half rate (Browse et al. 1979)
+const HENRY = 0.0336;         // µM dissolved CO2 per ppm in the gas phase at 25 °C
+const GAMMA_PPM = 17;         // CO2 compensation point at 24 °C (Barko et al. 1980)
+const ALPHA = 0.1;            // bubbles/min per µmol photons, white light (light compensation ~15 µmol)
+const THETA = 0.85;           // curvature of light response
+const R25 = 1.5;              // respiration at 25 °C, bubble-equivalents/min
+const O2_PER_BUBBLE_MM3 = 0.2;// oxygen carried per bubble (0.6 mm³ bubble, part O2); checked against Browse 1979 Pmax and chlorophyll per sprig
+const GLU_PER_BUBBLE_MG = (O2_PER_BUBBLE_MM3*1e-6/24.5)/6*180*1000; // mg glucose per bubble
+const STARCH_MAX_MG = 2;
+const MAX_TRIALS = 100;
+const SPEC = [[400,.55],[420,.68],[440,.74],[460,.70],[480,.66],[500,.60],[520,.55],[540,.53],[560,.56],[580,.66],[600,.82],[620,.92],[640,.96],[660,1],[680,.92],[700,.45]];
+const WHITE_Y = 0.719;
+
+function specY(nm){ for(let i=0;i<SPEC.length-1;i++){const [a,ya]=SPEC[i],[b,yb]=SPEC[i+1]; if(nm>=a&&nm<=b) return ya+(yb-ya)*(nm-a)/(b-a);} return nm<400?SPEC[0][1]:SPEC[SPEC.length-1][1]; }
+function fCO2(ppm){ const c=ppm*HENRY, g=GAMMA_PPM*HENRY; if(c<=g) return 0; return (c-g)/(KM_UM+c-g); }
+function fTemp(t){ if(t<=25) return Math.pow(2,(t-25)/10); const k=(t-25)/17; return Math.max(0,1-k*k); }
+function resp(t){ return R25*Math.pow(2,(Math.min(t,45)-25)/10); }
+function grossRate(s){
+  const I=s.light/100*FULL_SUN, y=s.white?1:specY(s.wave)/WHITE_Y, a=ALPHA*y*I, pc=PMAX*fCO2(s.co2)*fTemp(s.temp);
+  if(a<=0||pc<=0) return 0; const sum=a+pc; return (sum-Math.sqrt(sum*sum-4*THETA*a*pc))/(2*THETA);
+}
+function netRate(s){ return Math.max(0, grossRate(s)-resp(s.temp)); }
+
+/* ---------- STATE ---------- */
+const $=id=>document.getElementById(id);
+const STD={light:50,temp:25,co2:420,wave:550,white:true};
+let S={...STD};
+let trials=[];
+let tSec=0, playing=false, timer=null, mode="lapse";
+let segs=[{t:0,rate:0}];   // t in seconds, rate in bubbles/min
+
+function readControls(){ S.light=+$("light").value; S.temp=+$("temp").value; S.co2=+$("co2").value; S.wave=+$("wave").value; }
+function setControls(){ $("light").value=S.light; $("temp").value=S.temp; $("co2").value=S.co2; $("wave").value=S.wave; }
+
+function setSegRate(){ const r=netRate(S); const last=segs[segs.length-1]; if(last.t===tSec) last.rate=r; else segs.push({t:tSec,rate:r}); }
+function totalBubbles(){ let tot=0; for(let i=0;i<segs.length;i++){ const a=segs[i].t, b=Math.min(i+1<segs.length?segs[i+1].t:tSec,tSec); if(b>a) tot+=segs[i].rate*(b-a)/60;} return tot; }
+function advance(ds){ const nt=Math.max(0,tSec+ds); if(nt<tSec){ segs=segs.filter(s=>s.t<=nt); if(!segs.length) segs=[{t:0,rate:0}]; } tSec=nt; setSegRate(); renderTime(); }
+
+/* ---------- LIMITING FACTOR ---------- */
+function limiting(){
+  const r=netRate(S);
+  if(S.light<=2 || (r<0.5 && S.light<15)) return "Light intensity (too dark: respiration uses all the oxygen)";
+  if(S.temp>=40 && r<0.5) return "Temperature (too hot: enzymes are damaged)";
+  if(S.co2<=60 && r<0.5) return "CO2 concentration (almost no CO2)";
+  const c=[["Light intensity", netRate({...S,light:Math.min(100,S.light+10)})],["CO2 concentration", netRate({...S,co2:Math.min(5000,S.co2+500)})]];
+  const tt=S.temp<25?Math.min(25,S.temp+5):Math.max(25,S.temp-5);
+  c.push([S.temp>25?"Temperature (too hot)":"Temperature (too cold)", netRate({...S,temp:tt})]);
+  if(!S.white) c.push(["Light wavelength (colour)", netRate({...S,wave:660})]);
+  c.sort((a,b)=>b[1]-a[1]);
+  if((c[0][1]-r)/Math.max(r,0.5)<0.03) return "No single factor: the plant is near its top rate for these settings";
+  return c[0][0];
+}
+
+/* ---------- RENDER ---------- */
+function waveName(nm){ if(nm<450)return"Violet"; if(nm<495)return"Blue"; if(nm<570)return"Green"; if(nm<590)return"Yellow"; if(nm<620)return"Orange"; return"Red"; }
+function waveRGB(nm){ let r=0,g=0,b=0;
+  if(nm<440){r=-(nm-440)/40;b=1}else if(nm<490){g=(nm-440)/50;b=1}else if(nm<510){g=1;b=-(nm-510)/20}else if(nm<580){r=(nm-510)/70;g=1}else if(nm<645){r=1;g=-(nm-645)/65}else{r=1}
+  const f=nm<420?0.4+0.6*(nm-400)/20:nm>680?0.4+0.6*(700-nm)/20:1;
+  return `rgb(${Math.round(255*r*f)},${Math.round(255*g*f)},${Math.round(255*b*f)})`; }
+const fmt=(n,d=1)=>n.toFixed(d);
+
+function render(){
+  $("lightVal").textContent=S.light; $("tempVal").textContent=S.temp; $("co2Val").textContent=S.co2;
+  $("co2Pct").textContent=(S.co2/10000).toFixed(3).replace(/0+$/,"").replace(/\.$/,"")+"%";
+  $("waveVal").textContent=S.white?"White":`${S.wave} (${waveName(S.wave)})`;
+  $("luxNote").textContent=S.white?`About ${(Math.round(S.light*1.08)*1000).toLocaleString("en-US")} lux.`:"";
+  $("wave").disabled=S.white;
+  $("modeWhite").setAttribute("aria-pressed",S.white); $("modeColour").setAttribute("aria-pressed",!S.white);
+  const col=S.white?"#ffffff":waveRGB(S.wave), f=S.light/100;
+  $("beamStop0").setAttribute("stop-color",col); $("beamStop1").setAttribute("stop-color",col);
+  $("beam").setAttribute("opacity",(S.light===0?0:0.05+0.95*f).toFixed(3));
+  $("beamCore").setAttribute("fill",col); $("beamCore").setAttribute("opacity",(0.7*f*f).toFixed(3));
+  $("glowC").setAttribute("opacity",(f*f).toFixed(3));
+  $("bulb").setAttribute("fill",S.light===0?"var(--glass)":(S.white?(S.light>=90?"#fffdf2":"var(--lamp)"):col));
+  const h=Math.max(4,S.temp/50*160); $("thermo").setAttribute("y",262-h); $("thermo").setAttribute("height",h);
+  $("thermoTxt").textContent=S.temp+" °C";
+  $("lfBox").hidden=!$("showLF").checked; if($("showLF").checked) $("lfBox").textContent="Limiting factor now: "+limiting();
+  renderTime();
+}
+function renderTime(){
+  const tot=totalBubbles(), glu=tot*GLU_PER_BUBBLE_MG;
+  $("sTotal").textContent=Math.floor(tot).toLocaleString("en-US");
+  $("sGlu").textContent=glu.toFixed(3);
+  $("starchTxt").textContent=glu.toFixed(3)+" mg of "+STARCH_MAX_MG+" mg";
+  $("starchBar").style.width=Math.min(100,glu/STARCH_MAX_MG*100)+"%";
+  const h=Math.floor(tSec/3600), m=Math.floor(tSec%3600/60), s=Math.floor(tSec%60);
+  let txt="Time: "+(h?h+" h ":"")+m+" min";
+  if(mode==="real"||s) txt+=" "+String(s).padStart(2,"0")+" s";
+  $("clock").textContent=txt;
+}
+let liveRate=0;
+function liveTick(){ const r=netRate(S); liveRate=r<=0?0:r*(1+(Math.random()-0.5)*0.04); $("sRate").textContent=fmt(liveRate); }
+
+/* ---------- PLANT + BUBBLES ---------- */
+const PX=410, PTOP=118;
+function drawPlant(){
+  const bottom=290; let s=`<line x1="${PX}" y1="${bottom}" x2="${PX}" y2="${PTOP}" stroke="#2f7d3a" stroke-width="4" stroke-linecap="round"/>`;
+  for(let y=bottom-6;y>PTOP+6;y-=13){ const sc=0.75+0.25*Math.sin(y);
+    s+=`<ellipse cx="${PX-13*sc}" cy="${y}" rx="${14*sc}" ry="4" fill="#2e8b3e" transform="rotate(-22 ${PX-13*sc} ${y})"/>`;
+    s+=`<ellipse cx="${PX+13*sc}" cy="${y-3}" rx="${14*sc}" ry="4" fill="#3aa04a" transform="rotate(22 ${PX+13*sc} ${y-3})"/>`;
+    s+=`<ellipse cx="${PX}" cy="${y-6}" rx="4" ry="9" fill="#267a35"/>`; }
+  s+=`<rect x="${PX-4}" y="${PTOP-3}" width="8" height="5" rx="1" fill="#9bcf8f"/>`;
+  $("plant").innerHTML=s;
+}
+const reduce=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+let bubbles=[], lastSpawn=performance.now(), lastFrame=performance.now();
+const NS="http://www.w3.org/2000/svg";
+function frame(now){
+  const dt=Math.min(0.1,(now-lastFrame)/1000); lastFrame=now;
+  const r=netRate(S);
+  if(r>0.05){ if(now-lastSpawn>=60/r*1000){ lastSpawn=now; spawn(); } } else lastSpawn=now;
+  for(const b of bubbles){ b.y-=b.v*dt; b.age+=dt; const wob=reduce?0:Math.sin(b.age*6+b.p)*2; b.el.setAttribute("cy",b.y); b.el.setAttribute("cx",PX+b.dx+wob); }
+  bubbles=bubbles.filter(b=>{ if(b.y<80){ b.el.remove(); return false;} return true; });
+  requestAnimationFrame(frame);
+}
+function spawn(){ const c=document.createElementNS(NS,"circle");
+  c.setAttribute("r",3+Math.random()*1.2); c.setAttribute("fill","var(--o2)"); c.setAttribute("stroke","#4aa3c7"); c.setAttribute("stroke-width","1"); c.setAttribute("cx",PX); c.setAttribute("cy",PTOP-6);
+  $("bubbles").appendChild(c); bubbles.push({el:c,y:PTOP-6,v:22+Math.random()*6,age:0,p:Math.random()*6,dx:(Math.random()-0.5)*4}); }
+
+/* ---------- TRIALS ---------- */
+function gauss(){ let u=0,v=0; while(!u)u=Math.random(); while(!v)v=Math.random(); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+function measured(){ const r=netRate(S); if(r<=0) return 0; const m=r*(1+gauss()*0.06)+gauss()*0.4; return Math.max(0,Math.round(m*10)/10); }
+function condKey(x){ return `${x.light}|${x.temp}|${x.co2}|${x.white?"White":x.wave}`; }
+function renderTable(){
+  let html=trials.map(r=>`<tr><td>${r.n}</td><td>${r.light}</td><td>${r.temp}</td><td>${r.co2}</td><td>${r.white?"White":r.wave}</td><td>${fmt(r.rate)}</td></tr>`).join("");
+  for(let i=trials.length;i<5;i++) html+='<tr class="blank"><td>.</td><td></td><td></td><td></td><td></td><td></td></tr>';
+  $("tbody").innerHTML=html;
+  $("countTxt").textContent=`${trials.length} / ${MAX_TRIALS} trials`;
+  $("recordBtn").disabled=trials.length>=MAX_TRIALS;
+  sizeTable(); renderAvg();
+}
+function sizeTable(){ // exactly header + 5 rows tall, so the scroll bar appears only after 5 trials
+  const w=$("tblWrap"), th=w.querySelector("thead").offsetHeight, rows=w.querySelectorAll("tbody tr");
+  let h=th; for(let i=0;i<5&&i<rows.length;i++) h+=rows[i].offsetHeight; w.style.maxHeight=(h+4)+"px"; w.style.height=(h+4)+"px";
+}
+function renderAvg(){
+  const box=$("avgBox"); box.hidden=!$("showAvg").checked; if(box.hidden) return;
+  if(!trials.length){ box.innerHTML='<p class="hint">No data yet.</p>'; return; }
+  const groups=new Map(); for(const r of trials){ const k=condKey(r); if(!groups.has(k)) groups.set(k,{r,vals:[]}); groups.get(k).vals.push(r.rate); }
+  box.innerHTML='<ul class="avg-list">'+[...groups.values()].map(g=>{const a=g.vals.reduce((x,y)=>x+y,0)/g.vals.length; return `<li>Light ${g.r.light}%, ${g.r.temp} °C, ${g.r.co2} ppm, ${g.r.white?"white light":g.r.wave+" nm"}: average <b>${fmt(a)}</b> bubbles/min (${g.vals.length} trial${g.vals.length>1?"s":""})</li>`}).join("")+"</ul>";
+}
+function record(){
+  if(trials.length>=MAX_TRIALS){ $("status").textContent="You have reached 100 trials. Clear the data to start again."; return; }
+  const rate=measured();
+  const row={n:trials.length+1,light:S.light,temp:S.temp,co2:S.co2,wave:S.wave,white:S.white,rate};
+  trials.push(row); renderTable();
+  const w=$("tblWrap"); w.scrollTop=w.scrollHeight;
+  let msg=`Trial ${row.n} recorded: ${fmt(rate)} bubbles/min. Copy it into your notebook.`;
+  if(trials.length>=MAX_TRIALS) msg+=" That was the last trial (limit 100).";
+  $("status").textContent=msg;
+}
+
+/* ---------- INDEPENDENT VARIABLE + CONTROLS ---------- */
+const IV={
+  light:{name:"Light intensity",unit:"%",min:0,xDef:100,xLo:10,xHi:100,xStep:10,snap:1},
+  temp:{name:"Temperature",unit:"°C",min:0,xDef:50,xLo:10,xHi:50,xStep:5,snap:1},
+  co2:{name:"CO₂ concentration",unit:"ppm",min:0,xDef:5000,xLo:500,xHi:5000,xStep:250,snap:10},
+  wave:{name:"Light wavelength",unit:"nm",min:400,xDef:700,xLo:450,xHi:700,xStep:25,snap:5}
+};
+const PLAIN={light:"Light intensity",temp:"Temperature",co2:"CO2 concentration",wave:"Light colour"};
+const IVLABEL={light:"Light intensity (%)",temp:"Temperature (°C)",co2:"CO2 concentration (ppm)",wave:"Light wavelength (nm)"};
+let ivKey="light", committed={...S}, changed=new Set(), pdata=null;
+
+/* in-page Yes / No dialog */
+function ask(msg,onYes,onNo){
+  const ov=document.createElement("div"); ov.className="overlay";
+  ov.innerHTML=`<div class="dialog" role="alertdialog" aria-modal="true" aria-labelledby="dlgMsg"><p id="dlgMsg"></p><div class="row"><button class="btn-primary" id="dlgYes">Yes</button><button id="dlgNo">No</button></div></div>`;
+  ov.querySelector("#dlgMsg").textContent=msg; document.body.appendChild(ov);
+  const close=fn=>{ ov.remove(); fn&&fn(); };
+  ov.querySelector("#dlgYes").onclick=()=>close(onYes);
+  ov.querySelector("#dlgNo").onclick=()=>close(onNo);
+  ov.addEventListener("keydown",e=>{ if(e.key==="Escape") close(onNo); });
+  ov.querySelector("#dlgNo").focus();
+}
+function differs(k,a,b){ return k==="wave" ? (a.white!==b.white || (!a.white && a.wave!==b.wave)) : a[k]!==b[k]; }
+function commit(){ committed={...S}; }
+function restore(keys){ for(const k of keys){ if(k==="wave"){ S.white=committed.white; S.wave=committed.wave; } else S[k]=committed[k]; } setControls(); onChange(); }
+function checkControls(){ // called when a slider is released or a button is pressed
+  const diff=["light","temp","co2","wave"].filter(k=>k!==ivKey && differs(k,S,committed));
+  if(!trials.length || !diff.length){ commit(); return; } // nothing recorded yet, or only the independent variable moved
+  ask("Are you sure you want to change the control variable?",
+    ()=>{ diff.forEach(k=>changed.add(PLAIN[k])); commit(); renderChanges(); },
+    ()=>{ restore(diff); });
+}
+function renderChanges(){ $("changes").innerHTML=[...changed].map(n=>`<div>${n} has changed</div>`).join(""); }
+function updateRoles(){
+  for(const k of ["light","temp","co2","wave"]){
+    const r=$("role-"+k), isIV=k===ivKey; r.textContent=isIV?"Independent":"Control"; r.className="role "+(isIV?"iv":"cv");
+    $("f-"+k).classList.toggle("is-iv",isIV);
+  }
+  $("modeWhite").disabled=ivKey==="wave";
+  $("modeWhite").title=ivKey==="wave"?"Use One colour when wavelength is the independent variable":"";
+}
+function setIV(k){
+  ivKey=k; $("ivMain").value=k;
+  if(k==="wave" && S.white){ S.white=false; onChange(); }
+  commit(); updateRoles(); renderProcessed();
+  $("ivText").textContent=IVLABEL[k]; hover=null; drag=null; updateGraphUI();
+}
+$("ivMain").addEventListener("change",()=>{
+  const nk=$("ivMain").value; if(nk===ivKey) return;
+  if(trials.length || pdata){
+    $("ivMain").value=ivKey;
+    ask("Do you want to remove the data from the raw and processed data tables?",
+      ()=>{ trials=[]; pdata=null; changed.clear(); renderTable(); renderChanges(); setIV(nk); $("status").textContent="Data removed. New independent variable: "+IVLABEL[nk]+"."; $("pStatus").textContent=""; },
+      ()=>{ $("ivMain").value=ivKey; });
+  } else setIV(nk);
+});
+
+/* ---------- PROCESSED DATA TABLE ---------- */
+function ivValue(r){ return ivKey==="wave" ? (r.white?"White":r.wave) : r[ivKey]; }
+function transfer(){
+  if(!trials.length){ $("pStatus").textContent="Record some trials first."; return; }
+  const m=new Map(); for(const r of trials){ const v=ivValue(r); if(!m.has(v)) m.set(v,[]); m.get(v).push(r.rate); }
+  const rows=[...m.entries()].map(([x,vals])=>({x,vals,avg:null})).sort((a,b)=>(typeof a.x==="number"?a.x:1e9)-(typeof b.x==="number"?b.x:1e9));
+  pdata={rows,n:Math.max(...rows.map(r=>r.vals.length))};
+  renderProcessed();
+  $("pStatus").textContent=`Transferred ${trials.length} trial${trials.length>1?"s":""} into ${rows.length} row${rows.length>1?"s":""}. Now click Calculate average.`;
+}
+function renderProcessed(){
+  const n=pdata?pdata.n:3, rows=pdata?pdata.rows:[null,null,null];
+  let h=`<tr><th class="c-iv"></th><th colspan="${n}">Rate of photosynthesis (O<sub>2</sub> bubbles/min)</th><th class="c-avg"></th></tr><tr><th class="c-iv">${IVLABEL[ivKey].replace("CO2","CO<sub>2</sub>")}</th>`;
+  for(let i=1;i<=n;i++) h+=`<th class="c-tr">Trial ${i}</th>`;
+  h+=`<th class="c-avg">Average rate of photosynthesis (O<sub>2</sub> bubbles/min)</th></tr>`;
+  $("phead").innerHTML=h;
+  $("pbody").innerHTML=rows.map(r=>{
+    if(!r) return `<tr class="blank"><td>.</td>${"<td></td>".repeat(n)}<td></td></tr>`;
+    let t=`<tr><td><b>${r.x}</b></td>`; for(let i=0;i<n;i++) t+=`<td>${i<r.vals.length?fmt(r.vals[i]):""}</td>`;
+    return t+`<td>${r.avg==null?"":fmt(r.avg)}</td></tr>`; }).join("");
+}
+function calcAverage(){
+  if(!pdata){ $("pStatus").textContent="Transfer your data first."; return; }
+  pdata.rows.forEach(r=>{ r.avg=r.vals.reduce((a,b)=>a+b,0)/r.vals.length; });
+  renderProcessed(); $("pStatus").textContent="Averages calculated. Now plot each value and its average on the graph.";
+}
+function procRows(sep){
+  const n=pdata.n, head=[IVLABEL[ivKey]]; for(let i=1;i<=n;i++) head.push(`Trial ${i} (O2 bubbles/min)`); head.push("Average rate of photosynthesis (O2 bubbles/min)");
+  const lines=[head.join(sep)];
+  for(const r of pdata.rows){ const c=[r.x]; for(let i=0;i<n;i++) c.push(i<r.vals.length?fmt(r.vals[i]):""); c.push(r.avg==null?"":fmt(r.avg)); lines.push(c.join(sep)); }
+  return lines.join("\n");
+}
+function csv(){ return procRows(","); }
+function copyTSV(){
+  if(!pdata){ $("pStatus").textContent="Transfer your data first."; return; }
+  const txt=procRows("\t"), box=$("tsvBox"), ta=$("tsvText");
+  const fallback=()=>{ ta.value=txt; box.hidden=false; ta.focus(); ta.select(); $("pStatus").textContent="Press Ctrl+C to copy, then paste into Google Sheets."; };
+  if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(()=>{ box.hidden=true; $("pStatus").textContent="Copied. Paste into Google Sheets."; }).catch(fallback); else fallback();
+}
+
+/* ---------- GRAPH (students plot by hand) ---------- */
+const Y_DEF=20;
+const G={}; for(const k in IV) G[k]={xMax:IV[k].xDef,yMax:Y_DEF,pts:[]};
+let tool="add", drag=null, hover=null, trendOn=false, trendType="curve";
+const cv=$("cv"), ctx=cv.getContext("2d");
+const PL=100,PR=cv.width-30,PT=86,PB=cv.height-90;
+function curK(){ return ivKey; }
+function css(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim()||"#000"; }
+function niceStep(range){ const raw=range/8, p=Math.pow(10,Math.floor(Math.log10(raw))); for(const m of [1,2,2.5,5,10]){ if(m*p>=raw) return m*p; } return 10*p; }
+function sx(v){ const k=curK(); return PL+(v-IV[k].min)/(G[k].xMax-IV[k].min)*(PR-PL); }
+function sy(v){ return PB-v/G[curK()].yMax*(PB-PT); }
+function inv(cx,cy){ const k=curK(), iv=IV[k], g=G[k];
+  let x=iv.min+(cx-PL)/(PR-PL)*(g.xMax-iv.min), y=(PB-cy)/(PB-PT)*g.yMax;
+  x=Math.round(x/iv.snap)*iv.snap; y=Math.round(y*10)/10;
+  x=Math.min(g.xMax,Math.max(iv.min,x)); y=Math.min(g.yMax,Math.max(0,y)); return {x,y}; }
+function fontStr(sz,b){ return (b?"bold ":"")+sz+"px "+getComputedStyle(document.body).fontFamily; }
+/* least squares fit: straight line or second order polynomial */
+function fit(pts,type){
+  const need=type==="line"?2:3, distinct=new Set(pts.map(p=>p.x)).size;
+  if(distinct<need) return {msg:`Plot at least ${need} points with different x values to show a ${type==="line"?"straight line":"curve"}.`};
+  const n=pts.length, mx=pts.reduce((a,p)=>a+p.x,0)/n, sc=Math.max(1,Math.max(...pts.map(p=>Math.abs(p.x-mx))));
+  const X=pts.map(p=>(p.x-mx)/sc), Y=pts.map(p=>p.y), deg=type==="line"?1:2, m=deg+1;
+  const A=Array.from({length:m},()=>Array(m+1).fill(0));
+  for(let i=0;i<n;i++){ for(let r=0;r<m;r++){ for(let c=0;c<m;c++) A[r][c]+=Math.pow(X[i],r+c); A[r][m]+=Y[i]*Math.pow(X[i],r); } }
+  for(let c=0;c<m;c++){ let piv=c; for(let r=c+1;r<m;r++) if(Math.abs(A[r][c])>Math.abs(A[piv][c])) piv=r; [A[c],A[piv]]=[A[piv],A[c]];
+    if(Math.abs(A[c][c])<1e-12) return {msg:"Cannot draw a trend line for these points."};
+    for(let r=0;r<m;r++){ if(r===c) continue; const f=A[r][c]/A[c][c]; for(let k=c;k<=m;k++) A[r][k]-=f*A[c][k]; } }
+  const coef=A.map((row,i)=>row[m]/row[i]);
+  return {f:x=>{ const u=(x-mx)/sc; return coef.reduce((a,c,i)=>a+c*Math.pow(u,i),0); }, x0:Math.min(...pts.map(p=>p.x)), x1:Math.max(...pts.map(p=>p.x))};
+}
+function drawGraph(){
+  const k=curK(), iv=IV[k], g=G[k], W=cv.width, H=cv.height;
+  const ink=css("--ink"), muted=css("--muted"), line=css("--line"), surf=css("--surface"), warn=css("--warn-ink"), mine=css("--mine"), trc=css("--trend");
+  ctx.fillStyle=surf; ctx.fillRect(0,0,W,H);
+  const nm=iv.name.toLowerCase().replace("co₂","CO₂");
+  ctx.lineWidth=1; ctx.strokeStyle=line; ctx.fillStyle=muted; ctx.font=fontStr(17);
+  const xs=niceStep(g.xMax-iv.min); ctx.textAlign="center"; ctx.textBaseline="top";
+  for(let v=iv.min; v<=g.xMax+1e-9; v+=xs){ const X=sx(v); ctx.beginPath(); ctx.moveTo(X,PT); ctx.lineTo(X,PB); ctx.stroke(); ctx.fillText(String(+v.toFixed(2)),X,PB+8); }
+  const ys=niceStep(g.yMax); ctx.textAlign="right"; ctx.textBaseline="middle";
+  for(let v=0; v<=g.yMax+1e-9; v+=ys){ const Y=sy(v); ctx.beginPath(); ctx.moveTo(PL,Y); ctx.lineTo(PR,Y); ctx.stroke(); ctx.fillText(String(+v.toFixed(2)),PL-8,Y); }
+  ctx.strokeStyle=ink; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(PL,PT-6); ctx.lineTo(PL,PB); ctx.lineTo(PR+6,PB); ctx.stroke();
+  ctx.fillStyle=ink; ctx.textAlign="center"; ctx.textBaseline="alphabetic"; ctx.font=fontStr(20,true);
+  ctx.fillText(`The effect of ${nm} on the rate of photosynthesis in Elodea`,W/2,32);
+  ctx.font=fontStr(18,true); ctx.fillText(`${iv.name} (${iv.unit})`,(PL+PR)/2,PB+52);
+  ctx.save(); ctx.translate(30,(PT+PB)/2); ctx.rotate(-Math.PI/2); ctx.fillText("Average rate of photosynthesis (O₂ bubbles/min)",0,0); ctx.restore();
+  if(!g.pts.length){
+    ctx.font="italic "+fontStr(16); ctx.fillStyle=warn;
+    ctx.fillText("Title: The effect of [independent variable] on [dependent variable]",W/2,58);
+    ctx.fillText("x axis: independent variable (unit)",(PL+PR)/2,PB+76);
+    ctx.save(); ctx.translate(54,(PT+PB)/2); ctx.rotate(-Math.PI/2); ctx.fillText("y axis: dependent variable (unit)",0,0); ctx.restore();
+  }
+  ctx.save(); ctx.beginPath(); ctx.rect(PL-8,PT-8,PR-PL+16,PB-PT+16); ctx.clip();
+  const legend=[]; let tmsg="";
+  if(trendOn){
+    const r=fit(g.pts,trendType==="line"?"line":"curve");
+    if(r.msg) tmsg=r.msg; else {
+      ctx.strokeStyle=trc; ctx.lineWidth=3; ctx.setLineDash([12,8]); ctx.beginPath();
+      for(let i=0;i<=80;i++){ const x=r.x0+(r.x1-r.x0)*i/80, X=sx(x), Y=sy(r.f(x)); i?ctx.lineTo(X,Y):ctx.moveTo(X,Y); }
+      ctx.stroke(); ctx.setLineDash([]); legend.push("trend");
+    }
+  }
+  for(const p of g.pts) diamond(sx(p.x),sy(p.y),9,mine,p===drag);
+  if(g.pts.length) legend.unshift("mine");
+  if(tool==="add" && hover && !drag){ ctx.globalAlpha=.45; diamond(sx(hover.x),sy(hover.y),9,mine,false); ctx.globalAlpha=1; }
+  ctx.restore();
+  const tipP=drag||(tool==="add"?hover:null);
+  if(tipP) tooltip(sx(tipP.x),sy(tipP.y),`${tipP.x} ${iv.unit}, ${tipP.y.toFixed(1)} bubbles/min`);
+  let lx=PR-10; ctx.font=fontStr(16); ctx.textBaseline="middle"; ctx.textAlign="right";
+  const items={mine:["My points",x=>diamond(x,PT-22,8,mine,false)],
+    trend:["Trend line",x=>{ctx.strokeStyle=trc;ctx.lineWidth=3;ctx.setLineDash([8,5]);ctx.beginPath();ctx.moveTo(x-14,PT-22);ctx.lineTo(x+10,PT-22);ctx.stroke();ctx.setLineDash([]);}]};
+  for(const key of legend.slice().reverse()){ const [txt,draw]=items[key]; ctx.fillStyle=ink; ctx.fillText(txt,lx,PT-22); const w=ctx.measureText(txt).width; draw(lx-w-16); lx-=w+50; }
+  $("trendMsg").textContent=tmsg;
+  return g.pts.filter(p=>p.x>g.xMax||p.y>g.yMax).length;
+}
+function diamond(x,y,r,col,active){ ctx.save(); ctx.translate(x,y); ctx.rotate(Math.PI/4); ctx.fillStyle=col; ctx.fillRect(-r*.7,-r*.7,r*1.4,r*1.4);
+  ctx.lineWidth=active?3:1.5; ctx.strokeStyle=active?css("--ink"):css("--surface"); ctx.strokeRect(-r*.7,-r*.7,r*1.4,r*1.4); ctx.restore(); }
+function tooltip(x,y,txt){ ctx.font=fontStr(16,true); const w=ctx.measureText(txt).width+16, h=28;
+  let bx=x+14, by=y-h-10; if(bx+w>cv.width-4) bx=x-w-14; if(by<4) by=y+14;
+  ctx.fillStyle=css("--ink"); ctx.beginPath(); ctx.roundRect?ctx.roundRect(bx,by,w,h,6):ctx.rect(bx,by,w,h); ctx.fill();
+  ctx.fillStyle=css("--surface"); ctx.textAlign="left"; ctx.textBaseline="middle"; ctx.fillText(txt,bx+8,by+h/2); }
+function updateGraphUI(){
+  const k=curK(), iv=IV[k], g=G[k];
+  const xr=$("xMax"); xr.min=iv.xLo; xr.max=iv.xHi; xr.step=iv.xStep; xr.value=g.xMax; $("xMaxVal").textContent=g.xMax+" "+iv.unit;
+  $("yMax").value=g.yMax; $("yMaxVal").textContent=g.yMax;
+  $("trendBtn").textContent=trendOn?"Hide trend line":"Show trend line";
+  $("trLine").setAttribute("aria-pressed",trendType==="line"); $("trCurve").setAttribute("aria-pressed",trendType==="curve");
+  const off=drawGraph();
+  $("graphNote").textContent=off?`${off} point${off>1?"s are":" is"} outside the graph. Make the axis maximum bigger.`:""; $("graphNote").hidden=!off;
+}
+function canvasPos(e){ const r=cv.getBoundingClientRect(); return {cx:(e.clientX-r.left)*cv.width/r.width, cy:(e.clientY-r.top)*cv.height/r.height}; }
+function inPlot(c){ return c.cx>=PL-10&&c.cx<=PR+10&&c.cy>=PT-10&&c.cy<=PB+10; }
+function nearest(c){ const g=G[curK()]; let best=null,bd=18; for(const p of g.pts){ const d=Math.hypot(sx(p.x)-c.cx,sy(p.y)-c.cy); if(d<bd){bd=d;best=p;} } return best; }
+cv.addEventListener("pointerdown",e=>{
+  const c=canvasPos(e); if(!inPlot(c)) return; const g=G[curK()];
+  if(tool==="add"){ const p=inv(c.cx,c.cy); g.pts.push(p); drag=p; cv.setPointerCapture(e.pointerId); }
+  else if(tool==="move"){ const p=nearest(c); if(p){ drag=p; cv.setPointerCapture(e.pointerId); } }
+  else { const p=nearest(c); if(p) g.pts.splice(g.pts.indexOf(p),1); }
+  e.preventDefault(); updateGraphUI();
+});
+cv.addEventListener("pointermove",e=>{
+  const c=canvasPos(e);
+  if(drag){ const p=inv(c.cx,c.cy); drag.x=p.x; drag.y=p.y; drawGraph(); return; }
+  hover=(tool==="add"&&inPlot(c))?inv(c.cx,c.cy):null;
+  cv.style.cursor=tool==="add"?(hover?"crosshair":"default"):(nearest(c)?(tool==="move"?"grab":"pointer"):"default");
+  drawGraph();
+});
+function endDrag(){ if(drag){ drag=null; updateGraphUI(); } }
+cv.addEventListener("pointerup",endDrag); cv.addEventListener("pointercancel",endDrag);
+cv.addEventListener("pointerleave",()=>{ if(!drag){ hover=null; drawGraph(); } });
+function setTool(t){ tool=t; [["tAdd","add"],["tMove","move"],["tDel","del"]].forEach(([id,v])=>$(id).setAttribute("aria-pressed",t===v));
+  $("toolHint").textContent=t==="add"?"Click on the graph to add a point. Hold and drag to adjust it.":t==="move"?"Drag a point to move it.":"Click a point to remove it."; hover=null; drawGraph(); }
+$("tAdd").onclick=()=>setTool("add"); $("tMove").onclick=()=>setTool("move"); $("tDel").onclick=()=>setTool("del");
+$("xMax").addEventListener("input",()=>{ G[curK()].xMax=+$("xMax").value; updateGraphUI(); });
+$("yMax").addEventListener("input",()=>{ G[curK()].yMax=+$("yMax").value; updateGraphUI(); });
+$("resetGraph").onclick=()=>{ const k=curK(); G[k]={xMax:IV[k].xDef,yMax:Y_DEF,pts:[]}; trendOn=false; updateGraphUI(); };
+$("trendBtn").onclick=()=>{ trendOn=!trendOn; updateGraphUI(); };
+$("trLine").onclick=()=>{ trendType="line"; updateGraphUI(); };
+$("trCurve").onclick=()=>{ trendType="curve"; updateGraphUI(); };
+
+/* ---------- TIME MODES ---------- */
+function startTimer(){ clearInterval(timer); if(playing) timer=setInterval(()=>advance(mode==="real"?1:60),1000); }
+function setMode(m){ mode=m; $("mReal").setAttribute("aria-pressed",m==="real"); $("mLapse").setAttribute("aria-pressed",m==="lapse");
+  $("modeHint").textContent=m==="real"?"Real time: 1 second on screen = 1 second. Count the bubbles for 1 minute.":"Time lapse: 1 second on screen = 1 minute.";
+  startTimer(); renderTime(); }
+$("mReal").onclick=()=>setMode("real"); $("mLapse").onclick=()=>setMode("lapse");
+$("playBtn").onclick=()=>{ playing=!playing; $("playBtn").textContent=playing?"⏸ Pause":"▶ Play"; startTimer(); };
+document.querySelectorAll("[data-dt]").forEach(b=>b.onclick=()=>advance(+b.dataset.dt*60));
+
+/* ---------- EVENTS ---------- */
+function onChange(){ readControls(); setSegRate(); render(); liveTick(); }
+["light","temp","co2","wave"].forEach(id=>{ $(id).addEventListener("input",onChange); $(id).addEventListener("change",checkControls); });
+$("modeWhite").onclick=()=>{ if(S.white) return; S.white=true; onChange(); checkControls(); };
+$("modeColour").onclick=()=>{ if(!S.white) return; S.white=false; onChange(); checkControls(); };
+$("resetStd").onclick=()=>{ S={...STD}; if(ivKey==="wave") S.white=false; setControls(); onChange(); checkControls(); $("status").textContent="Standard conditions set."; };
+$("ppmBtn").onclick=()=>{ const tip=$("ppmTip"); tip.hidden=!tip.hidden; $("ppmBtn").setAttribute("aria-expanded",!tip.hidden); };
+$("showLF").onchange=render;
+$("showAvg").onchange=renderAvg;
+$("recordBtn").onclick=record;
+$("resetRun").onclick=()=>{ tSec=0; segs=[{t:0,rate:netRate(S)}]; bubbles.forEach(b=>b.el.remove()); bubbles=[]; renderTime(); };
+$("clearBtn").onclick=()=>{ if(!trials.length){ $("status").textContent="There is no data to clear."; return; } $("confirmTxt").textContent=`Delete all ${trials.length} raw trials? This cannot be undone.`; $("confirmBox").hidden=false; };
+$("confirmNo").onclick=()=>{$("confirmBox").hidden=true;};
+$("confirmYes").onclick=()=>{ trials=[]; changed.clear(); renderChanges(); commit(); renderTable(); $("confirmBox").hidden=true; $("status").textContent="Raw data cleared."; };
+$("transferBtn").onclick=transfer;
+$("avgBtn").onclick=calcAverage;
+$("copyBtn").onclick=copyTSV;
+$("pClearBtn").onclick=()=>{ if(!pdata){ $("pStatus").textContent="The processed data table is already empty."; return; } $("pConfirmBox").hidden=false; };
+$("pConfirmNo").onclick=()=>{$("pConfirmBox").hidden=true;};
+$("pConfirmYes").onclick=()=>{ pdata=null; renderProcessed(); $("pConfirmBox").hidden=true; $("tsvBox").hidden=true; $("pStatus").textContent="Processed data cleared."; };
+$("exportBtn").onclick=()=>{ if(!pdata){ $("pStatus").textContent="Transfer your data first."; return; } $("csvText").value=csv(); $("csvBox").hidden=false; };
+$("closeCsv").onclick=()=>{$("csvBox").hidden=true;};
+$("copyCsv").onclick=()=>{ const ta=$("csvText"); const done=()=>{$("csvHint").textContent="Copied. Paste it into a spreadsheet.";}, sel=()=>{ta.select();$("csvHint").textContent="Text selected. Press Ctrl+C to copy.";};
+  if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(ta.value).then(done).catch(sel); else sel(); };
+$("dlCsv").onclick=()=>{ try{ const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([csv()],{type:"text/csv"})); a.download="Elodea processed data.csv"; document.body.appendChild(a); a.click(); a.remove(); }catch(e){} };
+if(window.matchMedia){ const mq=matchMedia("(prefers-color-scheme: dark)"); mq.addEventListener&&mq.addEventListener("change",drawGraph); }
+new MutationObserver(drawGraph).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+window.addEventListener("resize",sizeTable);
+if(document.fonts&&document.fonts.ready) document.fonts.ready.then(()=>{ sizeTable(); drawGraph(); });
+
+/* ---------- START ---------- */
+drawPlant(); setControls(); segs=[{t:0,rate:netRate(S)}]; render(); liveTick(); renderTable(); setTool("add"); setIV("light"); renderChanges();
+setInterval(liveTick,1000);
+requestAnimationFrame(frame);
+window.__t={netRate,GLU_PER_BUBBLE_MG,G,get t(){return tSec},get trials(){return trials},get pdata(){return pdata},get S(){return S},get changed(){return [...changed]},get iv(){return ivKey},fit};
+})();
+</script>
+</body></html>
